@@ -712,7 +712,9 @@ const INCIDENT_TYPE_ABBREVIATIONS = {
   'vehicle breakdown': 'V. Bdown',
   'unattended vehicle': 'Unatt. Veh.',
   'heavy traffic': 'Heavy',
-  'road works': 'Rdworks',
+  'road works': 'Rdwks',
+  roadwork: 'Rdwks',
+  accident: 'Accdt',
   'road block': 'Rd Block',
   miscellaneous: 'Misc.',
 };
