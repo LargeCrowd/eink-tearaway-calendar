@@ -77,13 +77,19 @@ function getDayAccentColor({ weekdayEnglish, isPublicHoliday }) {
 
 function renderHeader(calendar, width, top, accent) {
   const { month, year, chineseMonthLabel } = calendar;
+  // Centre the English month between the seal's right edge (watermark at
+  // x=200, 250 wide) and the Chinese label's left edge (CJK glyphs are one
+  // font-size wide), so 4-character labels like 十一月小 don't collide.
+  const sealRight = 200 + 250 / 2;
+  const chineseLeft = width - 100 - chineseMonthLabel.length * 70;
+  const englishMonthX = (sealRight + chineseLeft) / 2;
   return `
     // Year (always black - the watermark behind it already carries the accent color)
     <text x="100" y="${top + 78}" font-family="Optima" fill="${SPECTRA6_HEX.black}" text-anchor="start">
       <tspan font-size="80" font-weight="800" fill="${SPECTRA6_HEX.black}">${year}</tspan>
     </text>
     // Month (en) - accent-colored, matching the day accent (green/blue/red)
-    <text x="${width / 2}" y="${top + 78}" font-family="Optima" fill="${accent}" text-anchor="middle">
+    <text x="${englishMonthX}" y="${top + 78}" font-family="Optima" fill="${accent}" text-anchor="middle">
       <tspan font-size="80" font-weight="700" letter-spacing="3" fill="${accent}">${escapeXml(month.toUpperCase())}</tspan>
     </text>
     // Month (chi)
