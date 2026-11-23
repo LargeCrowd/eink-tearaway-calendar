@@ -1,4 +1,4 @@
-# weather-project
+# E-Ink Tear-Away Calendar
 
 An e-ink display styled like a Chinese tear-away desk calendar - a big daily page number, Gregorian and lunar date,
 and today's weather. The backend supports two display targets, each with its own firmware:
@@ -10,6 +10,26 @@ and today's weather. The backend supports two display targets, each with its own
 Built off the display/backend pipeline from [rexyyong/bus_where](https://github.com/rexyyong/bus_where): the backend
 renders an SVG, converts it to a packed bitmap, and serves it over HTTP; the ESP32 polls that endpoint, downloads
 the bitmap, and draws it to its e-paper display.
+
+<p align="center">
+  <img src="docs/preview-color.png" alt="Color 13.3-inch layout, Chinese labels" width="450">
+</p>
+
+> **Hardware not built yet.** The e-ink panels are expensive, so both layouts have so far only been run and checked
+> through the browser preview endpoints (see [Endpoints](#endpoints)).
+
+## Christian themes
+
+A traditional tear-away calendar carries auspicious sayings - a couplet down each side of the day number and a
+blessing in the centre. This one keeps that layout but uses Christian verses and phrases instead:
+
+- **Couplets**: each day shows a Bible verse split across the two vertical columns, with its reference in a small column alongside
+  (e.g. 你要一心仰赖耶和华 / 不可倚靠自己的聪明, 箴言三章五节). 52 verses in `assets/data/couplets.json`.
+- **Centre ribbon**: a four-character Christian phrase, each drawn from a verse (e.g. 恩上加恩, John 1:16). 45 phrases in
+  `assets/data/scripture_phrases.json`. On solar-term days the ribbon shows the solar term instead, as a traditional
+  calendar would.
+
+Both are picked by date, so the page shows the same verse and phrase all day.
 
 ## Structure
 
@@ -75,8 +95,8 @@ The mono 800x480 layout (`generateSVG.js`) is a separate, simpler file and hasn'
 
 - `GET /api/create-display-image` - mono 800x480, packed 1-bit, 48,000 bytes. Polled by `esp32/code.ino`.
 - `GET /api/create-display-image-color` - color 1200x1600, packed indexed 4bpp, 960,000 bytes. Polled by
-  `esp32/color_13in3/code.ino`. Accepts `?lang=zh` to switch the weather grid's cell labels to Chinese (dev-only,
-  not wired to firmware).
+  `esp32/color_13in3/code.ino`. Accepts `?lang=zh` to switch the weather grid's cell labels and traffic incident
+  types to Chinese (dev-only, not wired to firmware).
 - `GET /api/preview` / `GET /api/preview-color` - dev-only, render the same layouts as plain PNGs so they can be
   viewed directly in a browser. Both accept `?preview=tomorrow` (the ESP32's "next day" button - shifts the calendar
   date only, not weather/air-quality, since NEA doesn't forecast those per-day) and `?lang=zh` (color only).
@@ -98,10 +118,12 @@ no extra dependency) - then just reload the preview URL in your browser after ed
   dataset (English names only; Chinese names are a hand-built lookup in `holidayNames.js`). Sunrise/sunset and moon
   phase are computed locally with `suncalc` (not an NEA data source).
 - **Transit** (color panel only): live bus arrival countdowns + crowding and MRT line health via LTA DataMall.
-  Requires `LTA_DATAMALL_API_KEY` in `.env` - see `.env.example` for where to request one.
+  Requires `LTA_DATAMALL_API_KEY` in `.env` - see `.env.example` for where to request one. The two bus stops shown
+  are set with `BUS_STOP_1_CODE` / `BUS_STOP_1_LABEL` and `BUS_STOP_2_CODE` / `BUS_STOP_2_LABEL` in `.env`.
 - **Expressway traffic** (color panel only): estimated travel time for each of 8 major expressways' 2 directions
   (LTA's `EstTravelTimes`), plus whichever ones currently have a reported incident (LTA's `TrafficIncidents` -
-  roadwork/breakdown, shown with LTA's own wording rather than an invented "heavy/light" label, since LTA doesn't
+  roadwork/breakdown, shown with LTA's own wording (abbreviated to fit, e.g. "Rdwks", or in Chinese with
+  `?lang=zh`) rather than an invented "heavy/light" label, since LTA doesn't
   publish an official congestion band for travel time the way it does for UV/PSI). Same `LTA_DATAMALL_API_KEY` as
   transit above. The Singapore-Johor checkpoint crossing time was considered but dropped - the only source found
   (sgtrafficnow.com) renders its live numbers client-side rather than in static HTML, so scraping it would need
