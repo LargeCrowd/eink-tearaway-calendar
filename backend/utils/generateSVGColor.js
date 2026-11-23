@@ -537,11 +537,11 @@ function renderInfoBoard(weather, width, accent, lang, timeString) {
     const [t0, t1, t2, t3] = trafficRows.slice(j * 4, j * 4 + 4);
     const [label, value, color] = astroMrtItems[j];
     trafficRowsSvg.push(
-      trafficCell(zoneRect(leftX, leftWidth, r), t0, FONT.trafficLabel, FONT.trafficValue),
-      trafficCell(zoneRect(trafficStop1X, trafficStop1Width, r), t1, FONT.trafficLabel, FONT.trafficValue),
+      trafficCell(zoneRect(leftX, leftWidth, r), t0, FONT.trafficLabel, FONT.trafficValue, lang),
+      trafficCell(zoneRect(trafficStop1X, trafficStop1Width, r), t1, FONT.trafficLabel, FONT.trafficValue, lang),
       labelValueLine(zoneRect(trafficIconX, trafficIconWidth, r), label, value, color, FONT.astroMrt),
-      trafficCell(zoneRect(trafficStop2X, trafficStop2Width, r), t2, FONT.trafficLabel, FONT.trafficValue),
-      trafficCell(zoneRect(rightStart, rightWidth, r), t3, FONT.trafficLabel, FONT.trafficValue),
+      trafficCell(zoneRect(trafficStop2X, trafficStop2Width, r), t2, FONT.trafficLabel, FONT.trafficValue, lang),
+      trafficCell(zoneRect(rightStart, rightWidth, r), t3, FONT.trafficLabel, FONT.trafficValue, lang),
     );
   }
 
@@ -719,21 +719,39 @@ const INCIDENT_TYPE_ABBREVIATIONS = {
   miscellaneous: 'Misc.',
 };
 
-function shortenIncidentType(type) {
-  return INCIDENT_TYPE_ABBREVIATIONS[type.toLowerCase()] || type;
+const INCIDENT_TYPE_ZH = {
+  accident: '车祸',
+  'road works': '修路',
+  roadwork: '修路',
+  'vehicle breakdown': '抛锚',
+  'heavy traffic': '拥堵',
+  'road block': '封路',
+  diversion: '改道',
+  obstacle: '路障',
+  'unattended vehicle': '弃车',
+  fire: '火灾',
+  'flash flood': '淹水',
+  weather: '天气',
+  miscellaneous: '其他',
+};
+
+function shortenIncidentType(type, lang) {
+  const key = type.toLowerCase();
+  if (lang === 'zh' && INCIDENT_TYPE_ZH[key]) return INCIDENT_TYPE_ZH[key];
+  return INCIDENT_TYPE_ABBREVIATIONS[key] || type;
 }
 
 // One expressway direction: route name on the left, minutes (+ incident
 // type in LTA's own wording, abbreviated if needed, if any) on the right,
 // single row - black when normal, red when LTA reports an incident.
-function trafficCell(rect, route, labelFontSize = 12, valueFontSize = 13) {
+function trafficCell(rect, route, labelFontSize = 12, valueFontSize = 13, lang = 'en') {
   const label = `${route.name}(${route.shortDest})`;
-  const value = route.minutes == null ? '-' : `${route.minutes}m${route.incidentType ? ` ${shortenIncidentType(route.incidentType)}` : ''}`;
+  const value = route.minutes == null ? '-' : `${route.minutes}m${route.incidentType ? ` ${shortenIncidentType(route.incidentType, lang)}` : ''}`;
   const color = route.incidentType ? SPECTRA6_HEX.red : SPECTRA6_HEX.black;
   const inset = 6;
   const y = rect.y + rect.height / 2 + valueFontSize * 0.35;
   return `<text x="${rect.x + inset}" y="${y}" font-size="${labelFontSize}" font-weight="700" font-family="Optima" fill="${SPECTRA6_HEX.black}" text-anchor="start">${escapeXml(label)}</text>
-    <text x="${rect.x + rect.width - inset}" y="${y}" font-size="${valueFontSize}" font-weight="700" font-family="Optima" fill="${color}" text-anchor="end">${escapeXml(value)}</text>`;
+    <text x="${rect.x + rect.width - inset}" y="${y}" font-size="${valueFontSize}" font-weight="700" font-family="Optima, 'Heiti SC', 'Noto Sans CJK SC', sans-serif" fill="${color}" text-anchor="end">${escapeXml(value)}</text>`;
 }
 
 // A softly-squared, accent-filled badge (white bold text) spanning the full
